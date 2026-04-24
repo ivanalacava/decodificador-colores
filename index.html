@@ -5,20 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Decodificador Triple</title>
     <style>
-        /* 1. Bloqueamos el tamaño del cuerpo a exactamente el tamaño de la pantalla */
+      
         body, html { 
             margin: 0; 
             padding: 0; 
             width: 100%; 
             height: 100%; 
-            /* 100dvh es una medida moderna que ignora la barra de direcciones del navegador móvil */
+           
             height: 100dvh; 
-            overflow: hidden; /* Esto elimina el scroll por completo */
+            overflow: hidden; 
             background: #000; 
             font-family: sans-serif; 
         }
         
-        /* 2. El contenedor ahora usa Flexbox para ocupar toda la pantalla verticalmente */
+      
         .contenedor-vistas { 
             display: flex; 
             flex-direction: column; 
@@ -26,7 +26,7 @@
             height: 100%; 
         }
         
-        /* 3. Cada vista toma exactamente "1 parte" (flex: 1) del espacio disponible, o sea un 33.3% */
+       
         .vista { 
             flex: 1; 
             position: relative; 
@@ -37,7 +37,6 @@
         }
         .vista:last-child { border-bottom: none; }
         
-        /* 4. LA MAGIA: Hacemos que el canvas ocupe su caja al 100% y se recorte sin aplastarse */
         canvas { 
             width: 100%; 
             height: 100%; 
@@ -84,7 +83,7 @@
             cursor: pointer; 
             border: none; 
             border-radius: 50px; 
-            background: #4CAF50; 
+            background: #730612; 
             color: white; 
             box-shadow: 0 4px #2e7d32; 
             transition: 0.2s; 
@@ -97,8 +96,8 @@
 <body>
 
     <div id="pantalla-inicio">
-        <h1>Decodificador</h1>
-        <p>Apunta la cámara a los mensajes ocultos</p>
+        <h1>Luces de la Memoria de 3°C - ESET</h1>
+        <p>Apunta la cámara para ver diferentes miradas</p>
         <button id="btn-iniciar">INICIAR EXPERIENCIA</button>
     </div>
 
