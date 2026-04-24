@@ -2,27 +2,103 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Decodificador Triple</title>
     <style>
-        body { font-family: sans-serif; text-align: center; background: #111; color: white; margin: 0; padding: 0; overflow-x: hidden; }
-        .contenedor-vistas { display: flex; flex-direction: column; gap: 5px; padding: 5px; }
-        .vista { position: relative; width: 100%; background: #000; border-radius: 4px; overflow: hidden; line-height: 0; }
-        canvas { width: 100%; height: auto; display: block; }
-        .etiqueta { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.6); padding: 5px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; text-transform: uppercase; line-height: 1.2; }
+        /* 1. Bloqueamos el tamaño del cuerpo a exactamente el tamaño de la pantalla */
+        body, html { 
+            margin: 0; 
+            padding: 0; 
+            width: 100%; 
+            height: 100%; 
+            /* 100dvh es una medida moderna que ignora la barra de direcciones del navegador móvil */
+            height: 100dvh; 
+            overflow: hidden; /* Esto elimina el scroll por completo */
+            background: #000; 
+            font-family: sans-serif; 
+        }
         
-        #pantalla-inicio { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #222; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; }
-        button { padding: 20px 40px; font-size: 20px; font-weight: bold; cursor: pointer; border: none; border-radius: 50px; background: #4CAF50; color: white; box-shadow: 0 4px #2e7d32; transition: 0.2s; }
+        /* 2. El contenedor ahora usa Flexbox para ocupar toda la pantalla verticalmente */
+        .contenedor-vistas { 
+            display: flex; 
+            flex-direction: column; 
+            width: 100%; 
+            height: 100%; 
+        }
+        
+        /* 3. Cada vista toma exactamente "1 parte" (flex: 1) del espacio disponible, o sea un 33.3% */
+        .vista { 
+            flex: 1; 
+            position: relative; 
+            width: 100%; 
+            overflow: hidden; 
+            background: #111; 
+            border-bottom: 3px solid #222; /* Una pequeña línea separadora */
+        }
+        .vista:last-child { border-bottom: none; }
+        
+        /* 4. LA MAGIA: Hacemos que el canvas ocupe su caja al 100% y se recorte sin aplastarse */
+        canvas { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+            display: block; 
+        }
+        
+        .etiqueta { 
+            position: absolute; 
+            top: 10px; 
+            left: 10px; 
+            background: rgba(0,0,0,0.8); 
+            padding: 5px 10px; 
+            border-radius: 4px; 
+            font-size: 12px; 
+            font-weight: bold; 
+            text-transform: uppercase; 
+            z-index: 10;
+        }
+
+        #pantalla-inicio { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: #1a1a1a; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            z-index: 100; 
+            text-align: center;
+            color: white;
+        }
+        
+        #pantalla-inicio h1 { margin-top: 0; color: #fff; }
+        #pantalla-inicio p { margin-bottom: 30px; color: #aaa; }
+        
+        button { 
+            padding: 18px 35px; 
+            font-size: 18px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            border: none; 
+            border-radius: 50px; 
+            background: #4CAF50; 
+            color: white; 
+            box-shadow: 0 4px #2e7d32; 
+            transition: 0.2s; 
+        }
         button:active { box-shadow: 0 0; transform: translateY(4px); }
         
-        video { display: none; } /* La cámara corre oculta */
+        video { display: none; }
     </style>
 </head>
 <body>
 
     <div id="pantalla-inicio">
         <h1>Decodificador</h1>
-        <p>Apunta a tus mensajes ocultos</p>
+        <p>Apunta la cámara a los mensajes ocultos</p>
         <button id="btn-iniciar">INICIAR EXPERIENCIA</button>
     </div>
 
@@ -38,7 +114,7 @@
             <canvas id="canvas-azul"></canvas>
         </div>
         <div class="vista">
-            <div class="etiqueta">Sin Filtro</div>
+            <div class="etiqueta" style="color: #fff;">Sin Filtro</div>
             <canvas id="canvas-normal"></canvas>
         </div>
     </div>
@@ -70,7 +146,6 @@
         function procesar() {
             if (video.paused || video.ended) return;
 
-            // Ajustar tamaño de los canvas al video
             Object.values(canvases).forEach(c => {
                 if (c.width !== video.videoWidth) {
                     c.width = video.videoWidth;
@@ -79,25 +154,21 @@
             });
 
             if (canvases.normal.width > 0) {
-                // 1. Dibujar vista Normal
                 ctxs.normal.drawImage(video, 0, 0);
 
-                // 2. Obtener datos para los filtros
                 const frame = ctxs.normal.getImageData(0, 0, canvases.normal.width, canvases.normal.height);
                 
-                // --- PROCESAR ROJO ---
                 const dataRojo = new Uint8ClampedArray(frame.data);
                 for (let i = 0; i < dataRojo.length; i += 4) {
-                    dataRojo[i + 1] = 0; // G
-                    dataRojo[i + 2] = 0; // B
+                    dataRojo[i + 1] = 0; 
+                    dataRojo[i + 2] = 0; 
                 }
                 ctxs.rojo.putImageData(new ImageData(dataRojo, frame.width, frame.height), 0, 0);
 
-                // --- PROCESAR AZUL ---
                 const dataAzul = new Uint8ClampedArray(frame.data);
                 for (let i = 0; i < dataAzul.length; i += 4) {
-                    dataAzul[i] = 0;     // R
-                    dataAzul[i + 1] = 0; // G
+                    dataAzul[i] = 0;     
+                    dataAzul[i + 1] = 0; 
                 }
                 ctxs.azul.putImageData(new ImageData(dataAzul, frame.width, frame.height), 0, 0);
             }
