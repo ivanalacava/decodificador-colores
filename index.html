@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Decodificador</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; background: #222; color: white; margin: 0; padding: 15px; }
+        canvas { max-width: 100%; border: 2px solid #555; background: #000; margin-top: 10px; border-radius: 8px; }
+        video { display: none; } /* Oculto, solo usamos el canvas */
+        
+        .botones { margin-top: 15px; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+        button { padding: 12px 15px; font-size: 16px; font-weight: bold; cursor: pointer; border: none; border-radius: 8px; color: white; width: 100%; max-width: 200px;}
+        
+        #btn-iniciar { background-color: #4CAF50; width: 100%; max-width: 300px; padding: 20px; font-size: 18px; margin-bottom: 20px; box-shadow: 0 4px #2e7d32;}
+        #btn-iniciar:active { box-shadow: 0 0; transform: translateY(4px); }
+        
+        #btn-rojo { background-color: #d32f2f; display: none; }
+        #btn-azul { background-color: #1976d2; display: none; }
+        #btn-normal { background-color: #555; display: none; }
+    </style>
+</head>
+<body>
+
+    <h2>Lente Decodificador</h2>
+    
+    <button id="btn-iniciar">📷 Encender Cámara</button>
+    
+    <video id="video" playsinline muted autoplay></video>
+    <canvas id="canvas"></canvas>
+
+    <div class="botones">
+        <button id="btn-rojo">Filtro Rojo</button>
+        <button id="btn-azul">Filtro Azul</button>
+        <button id="btn-normal">Sin Filtro</button>
+    </div>
+
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        
+        const btnIniciar = document.getElementById('btn-iniciar');
+        const btnRojo = document.getElementById('btn-rojo');
+        const btnAzul = document.getElementById('btn-azul');
+        const btnNormal = document.getElementById('btn-normal');
+
+        let filtroActual = 'normal';
+
+        btnRojo.onclick = () => filtroActual = 'rojo';
+        btnAzul.onclick = () => filtroActual = 'azul';
+        btnNormal.onclick = () => filtroActual = 'normal';
+
+        // Toda la lógica de la cámara ahora está adentro del evento de clic
+        btnIniciar.addEventListener('click', () => {
+            // video: true pide cualquier cámara disponible (la más básica, a prueba de fallos)
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(stream => {
+                    video.srcObject = stream;
+                    
+                    // Doble chequeo para forzar a Chrome móvil a no bloquear el video
+                    video.setAttribute('playsinline', 'true');
+                    video.muted = true;
+                    video.play();
+
+                    // Escondemos el botón de iniciar y mostramos los filtros
+                    btnIniciar.style.display = 'none';
+                    btnRojo.style.display = 'block';
+                    btnAzul.style.display = 'block';
+                    btnNormal.style.display = 'block';
+                })
+                .catch(err => {
+                    console.error("Error:", err);
+                    alert("No se pudo iniciar la cámara: " + err.message);
+                });
+        });
+
+        video.addEventListener('play', () => {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            procesarVideo();
+        });
+
+        function procesarVideo() {
+            if (video.paused || video.ended) return;
+
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            if (filtroActual !== 'normal') {
+                const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const data = frame.data;
+
+                for (let i = 0; i < data.length; i += 4) {
+                    if (filtroActual === 'rojo') {
+                        data[i + 1] = 0; 
+                        data[i + 2] = 0; 
+                    } else if (filtroActual === 'azul') {
+                        data[i] = 0;     
+                        data[i + 1] = 0; 
+                    }
+                }
+                ctx.putImageData(frame, 0, 0);
+            }
+
+            requestAnimationFrame(procesarVideo);
+        }
+    </script>
+</body>
+</html>
